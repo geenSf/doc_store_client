@@ -1,0 +1,57 @@
+{
+    "okud": "0504204",
+    "okpo": "03152495",
+    "number": "368",
+    "date": "2020-10-08",
+    "organization": "ГБУ СО КК \"Апшеронский психоневрологичекий интернат\"",
+    "sender": "Склад",
+    "recipient": "АУП",
+    "measure_unit": ["РУБ", 2,"383"],
+    "who_demands": "Щемелев Е.В.",
+    "who_allows": "Романенко С.А.",
+    "table_part": [
+        {
+            "name": "Оригинальный картридж Sharp MX-235 GT",
+            "number": "210536001454",
+            "measure_unit": ["PCE", 0,"796"],
+            "price": 3620.00,
+            "quantity_demanded": 1,
+            "quantity_allowed": 1,
+            "sum": 3620.00,
+            "debit_account": "10020000000000244.210536.346",
+            "credit_account": "10020000000000244.210536.346",
+            "note": ""
+            
+        },
+        {
+            "name": "Тонер Sharp MX237GT",
+            "number": "210536001554",
+            "measure_unit": ["PCE", 0,"796"],
+            "price": 948.00,
+            "quantity_demanded": 1,
+            "quantity_allowed": 1,
+            "sum": 948.00,
+            "debit_account": "10020000000000244.210536.346",
+            "credit_account": "10020000000000244.210536.346",
+            "note": ""
+            
+        },
+        {
+            "name": "Картридж NV-Print (TN-MX2375GT) для Brother HL-L2300/L2520",
+            "number": "210536001946",
+            "measure_unit": ["PCE", 0,"796"],
+            "price": 580.77,
+            "quantity_demanded": 1,
+            "quantity_allowed": 1,
+            "sum": 1742.31,
+            "debit_account": "10020000000000244.210536.346",
+            "credit_account": "10020000000000244.210536.346",
+            "note": ""
+            
+        }
+    ],
+    "who_released": ["Бабичева Т.Ю.", "Заведующая складом", "2020-10-08"],
+    "who_received": ["Щемелев Е.В.", "Системный администратор", "2020-10-08"],
+    "who_performed": ["Сельвян Э.С.", "Бухгалтер", "2020-10-08"]
+
+}
