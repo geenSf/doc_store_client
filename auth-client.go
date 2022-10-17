@@ -5,8 +5,6 @@
 package main
 
 import (
-	"bufio"
-	"crypto/tls"
 	"crypto/x509"
 	"flag"
 	"fmt"
@@ -30,6 +28,7 @@ func main() {
 	pass := flag.String("pass", "", "password")
 	filename := flag.String("file", "", "JSON message file")
 	exec := flag.String("exec", "", "execute REST method")
+	key := flag.String("key", "", "set key for GET method")
 	flag.Parse()
 
 	if *addr == "" {
@@ -55,45 +54,35 @@ func main() {
 		log.Fatalf("unable to parse cert from %s", *certFile)
 	}
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: certPool,
-			},
-		},
-	}
+	//create client
+	client := NewClient(*addr, certPool)
 
-	f, err := os.Open(*filename)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer f.Close()
-	reader := bufio.NewReader(f)
-
-	uri := "https://" + (*addr) + (*filename)
-	fmt.Println(uri)
+	var res *http.Response
 
 	// Set up HTTPS request with basic authorization.
+
+	// POST request
 	if *exec == "POST" || *exec == "PUT" {
-		req, err := http.NewRequest("POST", uri, reader)
+		res, err := client.PostReq(*filename, *user, *pass)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatal(err)
+		}
+	}
+
+	// GET request
+	if *exec == "GET" {
+
+		res, err := client.GetReq(key)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		req.Header.Set("Content-Type", "application/json; charset=utf-8")
-		req.SetBasicAuth(*user, *pass)
 	}
 
-	resp, err := client.Do(req)
+	html, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer resp.Body.Close()
-
-	html, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("HTTP Status:", resp.Status)
+	fmt.Println("HTTP Status:", res.Status)
 	fmt.Println("Response body:", string(html))
 }

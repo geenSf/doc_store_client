@@ -1,39 +1,23 @@
 package main
 
 import (
+	"bufio"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 
 	"fmt"
 	"net/http"
-	"net/url"
+	"os"
 	"time"
 )
 
 // Client .
 type Client struct {
-	apiKey     string
-	baseURL    string
 	HTTPClient *http.Client
-}
-
-// NewClient creates new client with given API key
-func NewClient(apiKey string) *Client {
-	return &Client{
-		apiKey: apiKey,
-		HTTPClient: &http.Client{
-			Timeout: 5 * time.Minute,
-		},
-		baseURL: "https://api.facest.io/v1",
-	}
-}
-
-// Rectangle .
-type Rectangle struct {
-	Top    int `json:"top"`
-	Left   int `json:"left"`
-	Width  int `json:"width"`
-	Height int `json:"height"`
+	baseURL    string
+	Transport  *http.Transport
 }
 
 type errorResponse struct {
@@ -46,10 +30,72 @@ type successResponse struct {
 	Data interface{} `json:"data"`
 }
 
+// creates new client with given API key
+func NewClient(baseURL string, certPool *x509.CertPool) *Client {
+	return &Client{
+
+		HTTPClient: &http.Client{
+			Timeout: 5 * time.Minute,
+		},
+		baseURL:   "https://" + baseURL,
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: certPool}},
+	}
+
+}
+
+// implements GET request
+func (c *Client) PostReq(filename string, user string, pass string) (*http.Response, error) {
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	reader := bufio.NewReader(f)
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", c.baseURL, filename), reader)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json; charset=utf-8")
+	req.SetBasicAuth(user, pass)
+
+	var res *http.Response
+
+	if err := c.sendRequest(req, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// implements GET request
+func (c *Client) GetReq(key string) (*http.Response, error) {
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", c.baseURL, key), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json; charset=utf-8")
+
+	var res *http.Response
+
+	if err := c.sendRequest(req, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // Content-type and body should be already added to req
 func (c *Client) sendRequest(req *http.Request, v interface{}) error {
-	req.Header.Set("Accept", "application/json; charset=utf-8")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+
+	//req.Header.Set("Accept", "application/json; charset=utf-8")
+	//req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -72,50 +118,10 @@ func (c *Client) sendRequest(req *http.Request, v interface{}) error {
 	fullResponse := successResponse{
 		Data: v,
 	}
+
 	if err = json.NewDecoder(res.Body).Decode(&fullResponse); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// GetFaces returns trained faces and their images
-func (c *Client) GetFaces(options *FacesListOptions) (*FacesList, error) {
-	limit := 100
-	page := 1
-	if options != nil {
-		limit = options.Limit
-		page = options.Page
-	}
-
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/faces?limit=%d&page=%d", c.baseURL, limit, page), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-
-	res := FacesList{}
-	if err := c.sendRequest(req, &res); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
-}
-
-// GetFace returns face object and its images by face_token
-func (c *Client) GetFace(faceToken string) (*Face, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/faces/%s", c.baseURL, url.PathEscape(faceToken)), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-
-	res := Face{}
-	if err := c.sendRequest(req, &res); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
 }
